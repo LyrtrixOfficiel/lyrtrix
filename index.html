@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LYRTRIX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Rubik+Mono+One&family=Black+Ops+One&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none;
+    }
+    
+    body {
+      height: 100vh;
+      background: #000;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      position: relative;
+    }
+    
+    /* Canvas principal */
+    #matrixCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      opacity: 0.4;
+    }
+    
+    /* Scanlines effet CRT */
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      z-index: 4;
+      pointer-events: none;
+      animation: scanlineMove 8s linear infinite;
+    }
+    
+    @keyframes scanlineMove {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(10px); }
+    }
+    
+    /* Vignette sombre */
+    .vignette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      box-shadow: inset 0 0 200px rgba(0,0,0,0.9);
+      z-index: 2;
+      pointer-events: none;
+    }
+    
+    /* Container principal */
+    .container {
+      position: relative;
+      z-index: 3;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* Logo LYRTRIX en haut */
+    .logo {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      letter-spacing: 0.5em;
+      color: #fff;
+      opacity: 0.3;
+      font-weight: 300;
+      z-index: 5;
+    }
+    
+    /* Texte SOON ultra dark avec police gothique */
+    .soon {
+      font-family: 'Black Ops One', cursive;
+      font-size: 140px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #0a0a0a;
+      position: relative;
+      text-shadow: 
+        0 0 2px rgba(255,255,255,0.15),
+        0 0 5px rgba(255,255,255,0.08),
+        2px 2px 0px rgba(0,0,0,0.9),
+        -1px -1px 0px rgba(50,50,50,0.3);
+      animation: breathing 4s ease-in-out infinite;
+      mix-blend-mode: screen;
+      filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+    }
+    
+    .soon::before {
+      content: 'SOON';
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: transparent;
+      background: linear-gradient(90deg, #0d0d0d, #1a1a1a, #0d0d0d);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: shimmer 3s linear infinite, glitchDark 5s infinite;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9));
+    }
+    
+    .soon::after {
+      content: 'SOON';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      color: #030303;
+      z-index: -1;
+      animation: glitchShadow 4s infinite;
+      text-shadow: 
+        1px 1px 0px rgba(0,0,0,0.8),
+        -1px -1px 0px rgba(80,80,80,0.1);
+    }
+    
+    /* Footer minimal */
+    .footer {
+      position: fixed;
+      bottom: 30px;
+      font-size: 9px;
+      letter-spacing: 0.6em;
+      text-transform: uppercase;
+      color: #1a1a1a;
+      z-index: 5;
+      opacity: 0.6;
+      font-weight: 300;
+    }
+    
+    /* Curseur ultra dark */
+    .cursor {
+      position: fixed;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: all 0.15s cubic-bezier(0.75, 0, 0.25, 1);
+      mix-blend-mode: difference;
+    }
+    
+    .cursor-dot {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transition: all 0.1s ease;
+    }
+    
+    /* Noise texture */
+    .noise {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.03;
+      z-index: 6;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
+      animation: grain 0.5s steps(2) infinite;
+    }
+    
+    /* Glitch rectangles */
+    .glitch-box {
+      position: fixed;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none;
+      z-index: 2;
+      animation: glitchBox 8s infinite;
+    }
+    
+    /* Animations */
+    @keyframes breathing {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.85;
+      }
+      50% {
+        transform: scale(1.02);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    @keyframes glitchDark {
+      0%, 90%, 100% {
+        transform: translate(0, 0);
+        opacity: 1;
+      }
+      91% {
+        transform: translate(-2px, 1px);
+        opacity: 0.8;
+      }
+      93% {
+        transform: translate(2px, -1px);
+        opacity: 0.9;
+      }
+      95% {
+        transform: translate(0, 0);
+      }
+    }
+    
+    @keyframes glitchShadow {
+      0%, 85%, 100% {
+        transform: translate(0, 0);
+        opacity: 0.5;
+      }
+      87% {
+        transform: translate(-3px, 2px);
+        opacity: 0.3;
+      }
+      89% {
+        transform: translate(3px, -2px);
+        opacity: 0.4;
+      }
+    }
+    
+    @keyframes grain {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -10%); }
+      30% { transform: translate(3%, -15%); }
+      50% { transform: translate(12%, 9%); }
+      70% { transform: translate(9%, 4%); }
+      90% { transform: translate(-1%, 7%); }
+    }
+    
+    @keyframes glitchBox {
+      0%, 100% {
+        opacity: 0;
+        transform: translate(0, 0) scale(1);
+      }
+      5% {
+        opacity: 0.3;
+        transform: translate(-10px, 5px) scale(1.1);
+      }
+      10% {
+        opacity: 0;
+        transform: translate(0, 0) scale(1);
+      }
+    }
+    
+    /* Distorsion hover */
+    .distortion {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(20,20,20,0.3) 0%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      filter: blur(40px);
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+  
+  <canvas id="matrixCanvas"></canvas>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+  <div class="distortion"></div>
+  
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+  
+  <div class="logo">LYRTRIX</div>
+  
+  <div class="container">
+    <div class="soon">SOON</div>
+    <div class="footer">LYRTRIX STUDIO PRODUCTION</div>
+  </div>
+
+  <script>
+    // Curseur
+    const cursor = document.querySelector('.cursor');
+    const cursorDot = document.querySelector('.cursor-dot');
+    const distortion = document.querySelector('.distortion');
+    
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let cursorX = mouseX;
+    let cursorY = mouseY;
+    
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+      distortion.style.left = mouseX + 'px';
+      distortion.style.top = mouseY + 'px';
+    });
+    
+    function updateCursor() {
+      cursorX += (mouseX - cursorX) * 0.1;
+      cursorY += (mouseY - cursorY) * 0.1;
+      
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+      
+      requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
+    
+    // Canvas Matrix minimal
+    const canvas = document.getElementById('matrixCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const chars = '01';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.8)';
+      ctx.font = fontSize + 'px monospace';
+      
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        
+        ctx.fillText(text, x, y);
+        
+        if (y > canvas.height && Math.random() > 0.98) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    
+    setInterval(drawMatrix, 50);
+    
+    // Glitch boxes dynamiques
+    function createGlitchBox() {
+      const box = document.createElement('div');
+      box.className = 'glitch-box';
+      box.style.width = Math.random() * 300 + 100 + 'px';
+      box.style.height = Math.random() * 200 + 50 + 'px';
+      box.style.left = Math.random() * 100 + '%';
+      box.style.top = Math.random() * 100 + '%';
+      document.body.appendChild(box);
+      
+      setTimeout(() => box.remove(), 8000);
+    }
+    
+    setInterval(createGlitchBox, 3000);
+    createGlitchBox();
+    createGlitchBox();
+    
+    // Effet de distorsion au mouvement
+    let lastX = mouseX;
+    let lastY = mouseY;
+    
+    setInterval(() => {
+      const speed = Math.sqrt(Math.pow(mouseX - lastX, 2) + Math.pow(mouseY - lastY, 2));
+      distortion.style.opacity = Math.min(speed / 50, 1);
+      lastX = mouseX;
+      lastY = mouseY;
+    }, 50);
+    
+    // Resize
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+    
+    // Glitch aléatoire sur le texte
+    const soonText = document.querySelector('.soon');
+    setInterval(() => {
+      if (Math.random() > 0.95) {
+        soonText.style.transform = `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)`;
+        setTimeout(() => {
+          soonText.style.transform = 'translate(0, 0)';
+        }, 50);
+      }
+    }, 100);
+  </script>
+  
+</body>
+</html>
